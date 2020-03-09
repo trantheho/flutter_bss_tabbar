@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutterbsstabbar/custom_painter.dart';
 
 void main() => runApp(MyApp());
 
@@ -41,7 +42,6 @@ class _MyHomePageState extends State<MyHomePage> {
             bottom: TabBar(
                 labelColor: Colors.redAccent,
                 unselectedLabelColor: Colors.white,
-                indicatorSize: TabBarIndicatorSize.label,
                 indicator: BoxDecoration(
                   /*borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(12),
@@ -50,118 +50,59 @@ class _MyHomePageState extends State<MyHomePage> {
                       left: BorderSide(
                       color: Colors.white70, width: 1, style: BorderStyle.solid)),
                 ),
-                indicatorPadding: EdgeInsets.only(top: 4, bottom: 4),
                 tabs: [
                   Tab(
-                    child: Stack(
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(left: 3, right: 3),
-                          child: Container(
-                            decoration: BoxDecoration(
-                                color: Color(0xff283593),
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(12),
-                                  topRight: Radius.circular(12),
-                                )
-                            ),
-                            child: Row(
-                              children: <Widget>[
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 2, right: 2),
-                                  child: IconButton(
-                                    icon: Icon(Icons.clear, color: Colors.red,),
-                                  ),
-                                ),
-                                Align(
-                                  alignment: Alignment.center,
-                                  child: Text("#002",
-                                    style: TextStyle(
-                                      color: Colors.red,
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            Container(
-                              height: 8,
-                              decoration: BoxDecoration(
-                                  color: Color(0xff283593),
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(16),
-                                    topRight: Radius.circular(16),
-                                  )
+                    child: CustomPaint(
+                      painter: ShapePainter(),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Align(
+                            child: Text("x",
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 14,
                               ),
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          Align(
+                            child: Text("#002",
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   Tab(
-                    child: Stack(
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(left: 3, right: 3),
-                          child: Container(
-                            decoration: BoxDecoration(
-                                color: Color(0xff283593),
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(12),
-                                  topRight: Radius.circular(12),
-                                )
-                            ),
-                            child: Row(
-                              children: <Widget>[
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 2, right: 2),
-                                  child: IconButton(
-                                    icon: Icon(Icons.clear, color: Colors.red,),
-                                  ),
-                                ),
-                                Align(
-                                  alignment: Alignment.center,
-                                  child: Text("#002",
-                                    style: TextStyle(
-                                      color: Colors.red,
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            Container(
-                              height: 8,
-                              decoration: BoxDecoration(
-                                  color: Color(0xff283593),
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(16),
-                                    topRight: Radius.circular(16),
-                                  )
+                    child: CustomPaint(
+                      painter: ShapePainter(),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          Align(
+                            child: Text("x",
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 14,
                               ),
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          Align(
+                            child: Text("#002",
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  /*Tab(
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: Text("GAMES"),
-                    ),
-                  ),*/
                   FlatButton(
                       onPressed: (){
                         print("add new tab");
@@ -178,7 +119,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
           body: TabBarView(children: [
-            Icon(Icons.apps),
+            CustomPaint(
+              painter: ShapePainter(),
+            ),
             Icon(Icons.movie),
             Icon(Icons.games),
           ]),
