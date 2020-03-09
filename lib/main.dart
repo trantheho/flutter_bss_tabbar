@@ -39,7 +39,9 @@ class _MyHomePageState extends State<MyHomePage> {
           appBar: AppBar(
             backgroundColor: Colors.redAccent,
             elevation: 0,
+            /// custom list item like tab
             bottom: TabBar(
+                isScrollable: true,
                 labelColor: Colors.redAccent,
                 unselectedLabelColor: Colors.white,
                 indicator: BoxDecoration(
