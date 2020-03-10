@@ -40,7 +40,7 @@ class _BSSTabBarState extends State<BSSTabBar> {
             child: Center(
               child: InkWell(
                 onTap: () {
-                  print("create new tab");
+                  addNewTab();
                 },
                 child: Icon(
                   Icons.add_circle,
@@ -65,13 +65,16 @@ class _BSSTabBarState extends State<BSSTabBar> {
             return InkWell(
               onTap: (){
                 setState(() {
-                  _scrollController.scrollTo(index: index, duration: Duration(milliseconds: 500));
+                  _scrollController.scrollTo(index: index, duration: Duration(milliseconds: 200));
                   _list.forEach((item) => item.checked = false);
                   _list[index].checked = true;
                   _itemIndex = index;
                 });
               },
-                child: TabItem(_list[index]),
+                child: TabItem(
+                  bill: _list[index],
+                  onRemoveTab: removeTab,
+                ),
             );
           },
         separatorBuilder: (context, index){
@@ -117,8 +120,28 @@ class _BSSTabBarState extends State<BSSTabBar> {
     );
   }
 
+  void addNewTab(){
+    var newItem = new Bill(checked: true, number: "#00${_list.length+1}");
+    setState(() {
+      _list.forEach((item) => item.checked = false);
+      _list.add(newItem);
+    });
 
+    _itemIndex = _list.length-1;
+    _scrollController.jumpTo(index: (_list.length-1));
 
+  }
+
+  void removeTab(){
+    int previousIndex = _itemIndex - 1;
+    setState(() {
+      _list.removeAt(_itemIndex);
+      _itemIndex = previousIndex;
+      _list[_itemIndex].checked = true;
+    });
+
+    _scrollController.jumpTo(index: _itemIndex);
+  }
 
 
 }

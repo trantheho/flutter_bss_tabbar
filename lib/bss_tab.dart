@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutterbsstabbar/bill_model.dart';
 import 'package:flutterbsstabbar/custom_painter.dart';
 
-class TabItem extends StatefulWidget {
+typedef RemoveTab = void Function();
 
+class TabItem extends StatefulWidget {
+  final RemoveTab onRemoveTab;
   Bill bill;
 
-  TabItem (this.bill);
+  TabItem ({this.bill, this.onRemoveTab});
 
   @override
   _TabItemState createState() => _TabItemState();
@@ -35,7 +37,7 @@ class _TabItemState extends State<TabItem> {
         children: <Widget>[
           Positioned(
             top: 5,
-              left: 10,
+              right: 10,
               child: Container(
                 width: 15,
                 height: 15,
@@ -45,7 +47,7 @@ class _TabItemState extends State<TabItem> {
                 ),
                 child: InkWell(
                   onTap: () {
-                    print("close tab");
+                    widget.onRemoveTab();
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(2),
@@ -89,4 +91,5 @@ class _TabItemState extends State<TabItem> {
       );
     }
   }
+
 }
