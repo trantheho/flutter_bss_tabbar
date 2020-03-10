@@ -1,5 +1,6 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter_widgets/flutter_widgets.dart';
+import 'package:flutterbsstabbar/bill_model.dart';
 import 'package:flutterbsstabbar/bss_tab.dart';
 
 class BSSTabBar extends StatefulWidget {
@@ -9,9 +10,21 @@ class BSSTabBar extends StatefulWidget {
 }
 
 class _BSSTabBarState extends State<BSSTabBar> {
+  ItemScrollController _scrollController = ItemScrollController();
+  int _itemIndex;
 
-  List<Widget> _widgets = List();
-  List<String> _list = ["#001", "#002", "#003",];
+  List<Bill> _list = [
+    Bill(checked: true, number: "#001"),
+    Bill(checked: false, number: "#002"),
+    Bill(checked: false, number: "#003"),
+    Bill(checked: false, number: "#004"),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _itemIndex = 0;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,49 +34,87 @@ class _BSSTabBarState extends State<BSSTabBar> {
       height: AppBar().preferredSize.height,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: _buildTab(),
+        children: <Widget>[
+          _buildTab(),
+          Container(
+            child: Center(
+              child: InkWell(
+                onTap: () {
+                  print("create new tab");
+                },
+                child: Icon(
+                  Icons.add_circle,
+                  color: Colors.white70,
+                ),
+              ),
+            ),
+          )
+        ],
       ),
     );
   }
 
-  List<Widget> _buildTab() {
-    int cout = 0;
-    for(int i = 0; i < _list.length; i++){
-      cout++;
-      _widgets.add(Expanded(
-        /// add tab item with number title
-        child: TabItem(_list[i]),
-      ));
+  _buildTab() {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width - 70,
+      child: ScrollablePositionedList.separated(
+          itemScrollController: _scrollController,
+          scrollDirection: Axis.horizontal,
+          itemCount: _list.length,
+          itemBuilder: (context, index){
+            return InkWell(
+              onTap: (){
+                setState(() {
+                  _scrollController.scrollTo(index: index, duration: Duration(milliseconds: 500));
+                  _list.forEach((item) => item.checked = false);
+                  _list[index].checked = true;
+                  _itemIndex = index;
+                });
+              },
+                child: TabItem(_list[index]),
+            );
+          },
+        separatorBuilder: (context, index){
+            return _buildDivider(index);
+        },
+      ),
 
-      _widgets.add(Center(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 4),
-          child: Container(
-            width: 2,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-            ),
-          ),
-        ),
-      ));
+    );
 
-      print("$cout");
+  }
+
+  _buildDivider(int index){
+    double opacity;
+
+    if(_itemIndex == 0){
+      if(index == (_itemIndex)){
+        opacity = 0.0;
+      }
+      else{
+        opacity = 1.0;
+      }
+    }
+    else{
+      if(index == (_itemIndex - 1) || index == (_itemIndex)){
+        opacity = 0.0;
+      }
+      else{
+        opacity = 1.0;
+      }
     }
 
- /*   /// create new tab button
-    _widgets.add(Center(
-      child: InkWell(
-        onTap: () {
-          print("create new tab");
-        },
-        child: Icon(
-          Icons.add_circle,
-          color: Colors.white70,
+    return Opacity(
+      opacity: opacity,
+      child: Padding(
+        padding:const EdgeInsets.only(top: 14, bottom: 14),
+        child: Center(
+          child: Container(
+            width: 1,
+            color: Colors.grey[200],
+          ),
         ),
       ),
-    ));*/
-
-    return _widgets;
+    );
   }
 
 
