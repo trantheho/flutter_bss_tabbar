@@ -1,3 +1,4 @@
+import 'package:animator/animator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widgets/flutter_widgets.dart';
 import 'package:flutterbsstabbar/bill_model.dart';
@@ -133,7 +134,15 @@ class _BSSTabBarState extends State<BSSTabBar> {
   }
 
   void removeTab(){
-    int previousIndex = _itemIndex - 1;
+    int previousIndex;
+
+    if(_itemIndex == 0) {
+      previousIndex = _itemIndex;
+    }
+    else{
+      previousIndex = _itemIndex - 1;
+    }
+
     setState(() {
       _list.removeAt(_itemIndex);
       _itemIndex = previousIndex;

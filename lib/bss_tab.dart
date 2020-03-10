@@ -36,7 +36,7 @@ class _TabItemState extends State<TabItem> {
       return Stack(
         children: <Widget>[
           Positioned(
-            top: 5,
+              top: 5,
               right: 10,
               child: Container(
                 width: 15,
@@ -47,6 +47,9 @@ class _TabItemState extends State<TabItem> {
                 ),
                 child: InkWell(
                   onTap: () {
+                    setState(() {
+                      /// using transform.scale to hide widget and remove item after that
+                    });
                     widget.onRemoveTab();
                   },
                   child: Padding(
