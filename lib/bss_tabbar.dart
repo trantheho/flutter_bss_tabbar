@@ -1,4 +1,5 @@
-import 'package:animator/animator.dart';
+import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widgets/flutter_widgets.dart';
 import 'package:flutterbsstabbar/bill_model.dart';
@@ -10,21 +11,39 @@ class BSSTabBar extends StatefulWidget {
 
 }
 
-class _BSSTabBarState extends State<BSSTabBar> {
-  ItemScrollController _scrollController = ItemScrollController();
+class _BSSTabBarState extends State<BSSTabBar> with TickerProviderStateMixin{
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  ScrollController _scrollController = ScrollController();
+  AnimationController animationController;
+  var scaleAnimation;
   int _itemIndex;
+  Timer delay;
 
   List<Bill> _list = [
-    Bill(checked: true, number: "#001"),
-    Bill(checked: false, number: "#002"),
-    Bill(checked: false, number: "#003"),
-    Bill(checked: false, number: "#004"),
+    Bill(checked: true, number: "#001", opacity: false),
+    Bill(checked: false, number: "#002", opacity: true),
+    Bill(checked: false, number: "#003", opacity: true),
+    Bill(checked: false, number: "#004", opacity: false),
   ];
 
   @override
   void initState() {
     super.initState();
     _itemIndex = 0;
+
+    animationController = AnimationController(
+        duration: Duration(milliseconds: 500),
+        lowerBound: 0.0,
+        upperBound: 1.0,
+        vsync: this
+    );
+    animationController.addListener((){
+      setState(() {
+        scaleAnimation = animationController.value;
+      });
+    });
+
+    animationController.forward(from: 0.0);
   }
 
   @override
@@ -39,7 +58,7 @@ class _BSSTabBarState extends State<BSSTabBar> {
           _buildTab(),
           Container(
             child: Center(
-              child: InkWell(
+              child: GestureDetector(
                 onTap: () {
                   addNewTab();
                 },
@@ -58,82 +77,56 @@ class _BSSTabBarState extends State<BSSTabBar> {
   _buildTab() {
     return SizedBox(
       width: MediaQuery.of(context).size.width - 70,
-      child: ScrollablePositionedList.separated(
-          itemScrollController: _scrollController,
+      child: AnimatedList(
+          key: _listKey,
+          controller: _scrollController,
           scrollDirection: Axis.horizontal,
-          itemCount: _list.length,
-          itemBuilder: (context, index){
-            return InkWell(
-              onTap: (){
-                setState(() {
-                  _scrollController.scrollTo(index: index, duration: Duration(milliseconds: 200));
-                  _list.forEach((item) => item.checked = false);
-                  _list[index].checked = true;
-                  _itemIndex = index;
-                });
-              },
-                child: TabItem(
-                  bill: _list[index],
-                  onRemoveTab: removeTab,
-                ),
-            );
+          initialItemCount: _list.length,
+          itemBuilder: (context, index, animation){
+            return _buildTabItem(context, index, animation);
           },
-        separatorBuilder: (context, index){
-            return _buildDivider(index);
-        },
       ),
 
     );
 
   }
 
-  _buildDivider(int index){
-    double opacity;
-
-    if(_itemIndex == 0){
-      if(index == (_itemIndex)){
-        opacity = 0.0;
-      }
-      else{
-        opacity = 1.0;
-      }
-    }
-    else{
-      if(index == (_itemIndex - 1) || index == (_itemIndex)){
-        opacity = 0.0;
-      }
-      else{
-        opacity = 1.0;
-      }
-    }
-
-    return Opacity(
-      opacity: opacity,
-      child: Padding(
-        padding:const EdgeInsets.only(top: 14, bottom: 14),
-        child: Center(
-          child: Container(
-            width: 1,
-            color: Colors.grey[200],
-          ),
+  _buildTabItem(BuildContext context, int index, animation) {
+    return SizeTransition(
+      sizeFactor: Tween<double>(begin: 0.0, end: 1.0).animate(animation),
+      child: InkWell(
+        onTap: (){
+          setState(() {
+            //_scrollController.animateTo();
+            //_scrollController.jumpTo(index.toDouble());
+            _list.forEach((item) => item.checked = false);
+            _list[index].checked = true;
+            _itemIndex = index;
+            refreshOpacity(index);
+          });
+        },
+        child: TabItem(
+          bill: _list[index],
+          onRemoveTab: removeTab,
         ),
       ),
     );
+
   }
 
-  void addNewTab(){
-    var newItem = new Bill(checked: true, number: "#00${_list.length+1}");
+  addNewTab(){
+    var newItem = new Bill(checked: true, number: "#00${_list.length+1}", opacity: false);
+    _listKey.currentState.insertItem(_list.length, duration: Duration(microseconds: 500));
     setState(() {
       _list.forEach((item) => item.checked = false);
       _list.add(newItem);
     });
-
     _itemIndex = _list.length-1;
-    _scrollController.jumpTo(index: (_list.length-1));
-
+    //_scrollController.offset();
+    refreshOpacity(_itemIndex);
   }
 
-  void removeTab(){
+  removeTab(){
     int previousIndex;
 
     if(_itemIndex == 0) {
@@ -143,13 +136,34 @@ class _BSSTabBarState extends State<BSSTabBar> {
       previousIndex = _itemIndex - 1;
     }
 
+    _listKey.currentState.removeItem(
+          _itemIndex,
+              (_, animation)=> _buildTabItem(context, _itemIndex, animation),
+          duration: Duration(microseconds: 500)
+    );
+
     setState(() {
       _list.removeAt(_itemIndex);
       _itemIndex = previousIndex;
       _list[_itemIndex].checked = true;
+      refreshOpacity(_itemIndex);
     });
 
-    _scrollController.jumpTo(index: _itemIndex);
+    _scrollController.jumpTo(_itemIndex.toDouble());
+
+  }
+
+  void refreshOpacity(int index){
+    _list.forEach((item) => item.opacity = true);
+    _list[_list.length-1].opacity = false;
+    if(index == 0){
+      _list[index].opacity = false;
+    }
+    else{
+      _list[index-1].opacity = false;
+      _list[index].opacity = false;
+    }
+
   }
 
 
