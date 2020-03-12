@@ -1,8 +1,9 @@
 class Bill {
   bool checked;
+  bool bottomLeft;
+  bool bottomRight;
   String number;
-  bool opacity;
 
-  Bill({this.checked, this.number, this.opacity});
+  Bill({this.checked, this.number, this.bottomLeft, this.bottomRight});
 
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutterbsstabbar/bss_tab_bar.dart';
 import 'package:flutterbsstabbar/bss_tabbar.dart';
 import 'package:flutterbsstabbar/custom_painter.dart';
 

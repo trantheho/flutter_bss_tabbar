@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterbsstabbar/bill_model.dart';
@@ -21,6 +20,7 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
   final int textCheckedColor = 0xFFFFFFFF;
   final int textDefaultColor = 0x8AFFFFFF;
   AnimationController animationController;
+
   var scaleAnimation;
 
 
@@ -38,37 +38,12 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
       scaleAnimation = animationController.value;
     });
    });
-
    animationController.forward(from: 0.0);
    remove = false;
   }
 
   @override
   Widget build(BuildContext context) {
-
-    /*return CustomPaint(
-      painter: widget.bill.checked ? ShapePainter() : null,
-      child: Row(
-        children: <Widget>[
-          Container(
-            width: 110,
-            child: _buildContent(),
-          ),
-          Opacity(
-            opacity: widget.bill.opacity ? 1 : 0,
-            child: Padding(
-              padding:const EdgeInsets.only(top: 14, bottom: 14),
-              child: Center(
-                child: Container(
-                  width: 1,
-                  color: Colors.grey[200],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );*/
 
     return Transform.scale(
         scale: scaleAnimation,
@@ -80,18 +55,6 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
               Container(
                 width: 110,
                 child: _buildContent(),
-              ),
-              Opacity(
-                opacity: widget.bill.opacity ? 1 : 0,
-                child: Padding(
-                  padding:const EdgeInsets.only(top: 14, bottom: 14),
-                  child: Center(
-                    child: Container(
-                      width: 1,
-                      color: Colors.grey[200],
-                    ),
-                  ),
-                ),
               ),
             ],
           ),
@@ -115,14 +78,10 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
                 ),
                 child: InkWell(
                   onTap: () {
-                    //animationController.reverse();
-                    remove = true;
                     setState(() {
-                      if(remove){
-                        widget.onRemoveTab();
-                        remove = false;
-                      }
+                      //animationController.reverse();
                     });
+                    widget.onRemoveTab();
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(2),
