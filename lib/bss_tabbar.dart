@@ -22,9 +22,7 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
   final int backgroundFocusColor = 0xff1E2E90;
   final int backgroundDefaultColor = 0xff2437AC;
   AnimationController animationController;
-
   var scaleAnimation;
-
 
   @override
   void initState() {
@@ -41,37 +39,35 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
       });
     });
     animationController.forward(from: 0.0);
-    remove = false;
   }
 
   @override
   Widget build(BuildContext context) {
-
-    return Transform.scale(
-      scale: scaleAnimation,
-      alignment: Alignment.bottomLeft,
-      child: Row(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Container(
-              width: 150,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(12),
-                  topLeft: Radius.circular(12),
-                ),
-                color: Color(backgroundFocusColor),
-              ),
+      return Transform.scale(
+        scale: scaleAnimation,
+        alignment: Alignment.bottomLeft,
+        child: Row(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
               child: Container(
-                decoration: _decoration(),
-                child: _buildContent(),
+                width: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(12),
+                    topLeft: Radius.circular(12),
+                  ),
+                  color: Color(backgroundFocusColor),
+                ),
+                child: Container(
+                  decoration: _decoration(),
+                  child: _buildContent(),
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
   }
 
   _decoration(){
@@ -103,8 +99,8 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
               top: 0,
               right: 0,
               child: Container(
-                width: 15,
-                height: 15,
+                width: 20,
+                height: 20,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.grey,
@@ -112,9 +108,12 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
                 child: InkWell(
                   onTap: () {
                     setState(() {
-                      //animationController.reverse();
+                      animationController.reverse().whenComplete((){
+                        widget.bill.close = true;
+                        widget.onRemoveTab();
+                        animationController.forward(from: 1.0);
+                      });
                     });
-                    widget.onRemoveTab();
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(2),
@@ -170,54 +169,56 @@ class BSSTabBar extends StatefulWidget {
 class _BSSTabBarState extends State<BSSTabBar> {
   ItemScrollController _itemScrollController = ItemScrollController();
   final int backgroundFocusColor = 0xff1E2E90;
+  final int backgroundDefaultColor = 0xff2437AC;
   AnimationController animationController;
+  double _widthTabItem, _sizeBoxWidth, _maxRowWidth;
   int _itemIndex;
   Timer delay;
 
   List<Bill> _list = [
-    Bill(checked: true, number: "#001",bottomRight: false,bottomLeft: false ),
-    Bill(checked: false, number: "#002", bottomLeft: false, bottomRight: false),
-    Bill(checked: false, number: "#003", bottomRight: false, bottomLeft: false),
-    Bill(checked: false, number: "#004", bottomRight: false, bottomLeft: false),
+    Bill(checked: true, number: "#001",bottomRight: false,bottomLeft: false, close: false ),
+    Bill(checked: false, number: "#002", bottomLeft: false, bottomRight: false, close: false),
+    Bill(checked: false, number: "#003", bottomRight: false, bottomLeft: false, close: false),
+    Bill(checked: false, number: "#004", bottomRight: false, bottomLeft: false, close: false),
   ];
 
   @override
   void initState() {
     super.initState();
     _itemIndex = 0;
+    _widthTabItem = 120;
+    _sizeBoxWidth = (_list.length * _widthTabItem);
   }
 
   @override
   Widget build(BuildContext context) {
+    _maxRowWidth = MediaQuery.of(context).size.width - 70;
+    if(_sizeBoxWidth > _maxRowWidth){
+      _sizeBoxWidth = _maxRowWidth;
+    }
+    else {
+      _sizeBoxWidth = (_list.length * _widthTabItem);
+    }
+
     return Container(
       margin: EdgeInsets.only(top: 50),
       color: Color(0xff2437AC),
-      height: AppBar().preferredSize.height,
+      height: 72,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
+          _buildHeader(),
           _buildTab(),
-          Container(
-            child: Center(
-              child: GestureDetector(
-                onTap: () {
-                  addNewTab();
-                },
-                child: Icon(
-                  Icons.add_circle,
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-          )
+          _buildBottom(),
         ],
       ),
     );
   }
 
   _buildTab() {
+
     return SizedBox(
-      width: MediaQuery.of(context).size.width - 70,
+      width: _sizeBoxWidth,
       child: ScrollablePositionedList.separated(
           scrollDirection: Axis.horizontal,
           itemCount: _list.length,
@@ -244,6 +245,7 @@ class _BSSTabBarState extends State<BSSTabBar> {
           if(index < _list.length-1){
             _list[index + 1].bottomLeft = true;
           }
+          _sizeBoxWidth = _getWidth();
           _itemIndex = index;
           //_itemScrollController.jumpTo(index: _itemIndex);
         });
@@ -258,50 +260,182 @@ class _BSSTabBarState extends State<BSSTabBar> {
 
   _buildDivider(int index){
     bool opacity;
-    double _opacity;
 
     if(_itemIndex == 0){
       if(index == _itemIndex){
         opacity = false;
-        _opacity = 1.0;
       }
       else{
         opacity = true;
-        _opacity = 0.0;
       }
     }
     else{
       if(index == (_itemIndex - 1) || index == (_itemIndex)){
         opacity = false;
-        _opacity = 1.0;
       }
       else{
         opacity = true;
-        _opacity = 0.0;
       }
     }
     return Opacity(
       opacity: 1.0,
       child: Padding(
-        padding: EdgeInsets.only(top: 16, bottom: 14),
-        child: Center(
-          child: Container(
-            width: opacity ? 1 : 0,
-            color: Colors.grey[200],
+        padding: const EdgeInsets.only(top: 30, bottom: 14),
+        child: Container(
+          height: 20,
+          width: opacity ? 1 : 0,
+          color: Colors.grey[200],
+        ),
+      ),
+    );
+  }
+
+  _buildHeader(){
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Container(
+        width: 10,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(12),
+          ),
+          color: Color(backgroundFocusColor),
+        ),
+        child: Container(
+          width: 10,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.only(
+                bottomRight: (_itemIndex == 0) ? Radius.circular(12) : Radius.circular(0),
+            ),
+            color: Color(backgroundDefaultColor),
           ),
         ),
       ),
     );
   }
 
+  _buildBottom(){
+    bool opacity;
+    if(_itemIndex == _list.length - 1){
+      opacity = true;
+    }
+    else{
+      opacity = false;
+    }
+    return Row(
+      children: <Widget>[
+        /*Padding(
+          padding: const EdgeInsets.only(top: 30, bottom: 14),
+          child: Center(
+            child: Container(
+              height: 30,
+              width: opacity ? 0 : 1,
+              color: Colors.grey[200],
+            ),
+          ),
+        ),*/
+        Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: <Widget>[
+            Container(
+              child: Container(
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      addNewTab();
+                    },
+                    child: Icon(
+                      Icons.add_circle,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              width: 50,
+              height: 20,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                ),
+                color: Color(backgroundFocusColor),
+              ),
+              child: Container(
+                width: 20,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                      bottomLeft: (_itemIndex == _list.length-1) ? Radius.circular(12) : Radius.circular(0),
+                  ),
+                  color: Color(backgroundDefaultColor),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   addNewTab(){
-    var newItem = new Bill(checked: true, number: "#00${_list.length+1}",bottomRight: false, bottomLeft: false);
+    var newItem = new Bill(checked: true, number: "#00${_list.length+1}", bottomRight: false, bottomLeft: false, close: false);
     setState(() {
       _refreshItem();
       _list.add(newItem);
+      _sizeBoxWidth = _getWidth();
     });
     _itemIndex = _list.length-1;
     _list[_itemIndex -1].bottomRight = true;
+  }
+
+  removeTab(){
+    int previousIndex;
+
+    if(_itemIndex == 0) {
+      if(_list.length == 1){
+        setState(() {
+          if(_list[_itemIndex].close){
+            _list.removeAt(_itemIndex);
+            _sizeBoxWidth = _getWidth();
+          }
+        });
+      }
+      else{
+        previousIndex = _itemIndex;
+        setState(() {
+          if(_list[_itemIndex].close){
+            _list.removeAt(_itemIndex);
+            _itemIndex = previousIndex;
+            _list[_itemIndex].checked = true;
+
+            _sizeBoxWidth = _getWidth();
+          }
+        });
+        //_itemScrollController.jumpTo(index: _itemIndex);
+      }
+    }
+    else{
+      previousIndex = _itemIndex - 1;
+      setState(() {
+        _list.removeAt(_itemIndex);
+        _itemIndex = previousIndex;
+        _list[_itemIndex].checked = true;
+
+        _sizeBoxWidth = _getWidth();
+      });
+     // _itemScrollController.jumpTo(index: _itemIndex);
+    }
+  }
+
+  _getWidth(){
+    _maxRowWidth = MediaQuery.of(context).size.width - 60;
+    if( (_list.length * _widthTabItem) > _maxRowWidth){
+      _sizeBoxWidth = _maxRowWidth;
+    }
+    else {
+      _sizeBoxWidth = (_list.length * _widthTabItem);
+    }
+    return _sizeBoxWidth;
   }
 
   void _refreshItem(){
@@ -310,32 +444,15 @@ class _BSSTabBarState extends State<BSSTabBar> {
     _list.forEach((item) => item.bottomLeft = false);
   }
 
-  removeTab(){
-    int previousIndex;
-
-    if(_itemIndex == 0) {
-      previousIndex = _itemIndex;
-    }
-    else{
-      previousIndex = _itemIndex - 1;
-    }
-
-    setState(() {
-      _list.removeAt(_itemIndex);
-      _itemIndex = previousIndex;
-      _list[_itemIndex].checked = true;
-    });
-    //_itemScrollController.jumpTo(index: _itemIndex);
-  }
-
 }
 
 class Bill {
   bool checked;
   bool bottomLeft;
   bool bottomRight;
+  bool close;
   String number;
 
-  Bill({this.checked, this.number, this.bottomLeft, this.bottomRight});
+  Bill({this.checked, this.number, this.bottomLeft, this.bottomRight, this.close});
 
 }
