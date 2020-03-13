@@ -179,7 +179,6 @@ class _BSSTabBarState extends State<BSSTabBar> {
     Bill(checked: true, number: "#001",bottomRight: false,bottomLeft: false, close: false ),
     Bill(checked: false, number: "#002", bottomLeft: false, bottomRight: false, close: false),
     Bill(checked: false, number: "#003", bottomRight: false, bottomLeft: false, close: false),
-    Bill(checked: false, number: "#004", bottomRight: false, bottomLeft: false, close: false),
   ];
 
   @override
@@ -291,6 +290,14 @@ class _BSSTabBarState extends State<BSSTabBar> {
   }
 
   _buildHeader(){
+    bool border = false;
+    if(_itemIndex == 0 && _list.length > 0){
+      border = true;
+    }
+    else{
+      border = false;
+    }
+
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Container(
@@ -305,7 +312,7 @@ class _BSSTabBarState extends State<BSSTabBar> {
           width: 10,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.only(
-                bottomRight: (_itemIndex == 0) ? Radius.circular(12) : Radius.circular(0),
+                bottomRight: border ? Radius.circular(12) : Radius.circular(0),
             ),
             color: Color(backgroundDefaultColor),
           ),
