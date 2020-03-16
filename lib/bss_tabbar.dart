@@ -181,11 +181,9 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
 
 }
 
-typedef TabOnPressed = Function();
 
 class BSSTabBar extends StatefulWidget {
   List<String> tabTitle;
-  //TabOnPressed tabOnPressed;
   final bool showCloseIcon;
 
   BSSTabBar({this.tabTitle, this.showCloseIcon});
