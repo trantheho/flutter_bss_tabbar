@@ -35,12 +35,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
+  List<String> title = ["#001", "#002"];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: BSSTabBar(
-
+        tabTitle: title,
+        showCloseIcon: false,
       ),
     );
   }

@@ -1,22 +1,23 @@
-import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widgets/flutter_widgets.dart';
 
 typedef RemoveTab = void Function();
+typedef ScrollTab = void Function();
 
 class TabItem extends StatefulWidget {
   final RemoveTab onRemoveTab;
-  Bill bill;
+  final ScrollTab onScrollTab;
+  final bool showIconClose;
+  BssTabItem bssTabItem;
 
-  TabItem ({this.bill, this.onRemoveTab});
+  TabItem ({this.bssTabItem, this.onRemoveTab, this.onScrollTab, this.showIconClose});
 
   @override
   _TabItemState createState() => _TabItemState();
 }
 
 class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
-  bool leftBorder = true, rightBorder = true, firstItem = false, focus = true, remove = false;
   final int textCheckedColor = 0xFFFFFFFF;
   final int textDefaultColor = 0x8AFFFFFF;
   final int backgroundFocusColor = 0xff1E2E90;
@@ -38,8 +39,26 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
         scaleAnimation = animationController.value;
       });
     });
-    animationController.forward(from: 0.0);
+
+    /// in creating new tab, tab use animation forward with lowerBound 0.0
+    /// after created new tab, tab bar will scroll to new index
+    animationController.forward(from: 0.0).whenComplete((){
+      setState(() {
+        widget.onScrollTab();
+      });
+    });
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+    animationController.dispose();
+  }
+
+  ///nested 2 container to custom border tab
+  /// 1 container above set decoration color is [backgroundDefaultColor]
+  /// 1 container under set decoration color is [backgroundFocusColor]
+  /// when current tab is selected: previous tab set bottomRight border = true, next tab set bottomLeft border = true
 
   @override
   Widget build(BuildContext context) {
@@ -70,8 +89,9 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
       );
   }
 
+  /// custom container above decoration
   _decoration(){
-    if(widget.bill.checked){
+    if(widget.bssTabItem.checked){
       return BoxDecoration(
         borderRadius: BorderRadius.only(
           topRight: Radius.circular(16),
@@ -83,8 +103,8 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
     else{
         return BoxDecoration(
           borderRadius: BorderRadius.only(
-            bottomLeft: widget.bill.bottomLeft ? Radius.circular(12) : Radius.circular(0),
-            bottomRight: widget.bill.bottomRight ? Radius.circular(12) : Radius.circular(0),
+            bottomLeft: widget.bssTabItem.bottomLeft ? Radius.circular(12) : Radius.circular(0),
+            bottomRight: widget.bssTabItem.bottomRight ? Radius.circular(12) : Radius.circular(0),
           ),
           color:Color(backgroundDefaultColor),
         );
@@ -92,10 +112,10 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
   }
 
   _buildContent(){
-    if(widget.bill.checked){
+    if(widget.bssTabItem.checked){
       return Stack(
         children: <Widget>[
-          Positioned(
+          widget.showIconClose ? Positioned(
               top: 0,
               right: 0,
               child: Container(
@@ -109,25 +129,26 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
                   onTap: () {
                     setState(() {
                       animationController.reverse().whenComplete((){
-                        widget.bill.close = true;
-                        widget.onRemoveTab();
+                        widget.bssTabItem.close = true;
                         animationController.forward(from: 1.0);
+                        widget.onRemoveTab();
+                        //widget.onScrollTab();
                       });
                     });
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(2),
                     child: Image(
-                      image: AssetImage('assets/ic_close.png') ,
+                      image: AssetImage('assets/ic_close.png'),
                     ),
                   ),
                 ),
               )
-          ),
+          ) : Container(),
           Center(
             child: Container(
               child: Text(
-                '${widget.bill.number}',
+                '${widget.bssTabItem.number}',
                 style: TextStyle(
                   color: Color(textCheckedColor),
                   fontSize: 16,
@@ -145,7 +166,7 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
           Center(
             child: Container(
               child: Text(
-                '${widget.bill.number}',
+                '${widget.bssTabItem.number}',
                 style: TextStyle(
                   color:Color(textDefaultColor),
                   fontSize: 16,
@@ -160,44 +181,51 @@ class _TabItemState extends State<TabItem> with TickerProviderStateMixin{
 
 }
 
+typedef TabOnPressed = Function();
+
 class BSSTabBar extends StatefulWidget {
+  List<String> tabTitle;
+  //TabOnPressed tabOnPressed;
+  final bool showCloseIcon;
+
+  BSSTabBar({this.tabTitle, this.showCloseIcon});
+
+
   @override
   _BSSTabBarState createState() => _BSSTabBarState();
 
 }
 
-class _BSSTabBarState extends State<BSSTabBar> {
-  ItemScrollController _itemScrollController = ItemScrollController();
+class _BSSTabBarState extends State<BSSTabBar>{
   final int backgroundFocusColor = 0xff1E2E90;
   final int backgroundDefaultColor = 0xff2437AC;
-  AnimationController animationController;
+  ItemScrollController _itemScrollController = ItemScrollController();
   double _widthTabItem, _sizeBoxWidth, _maxRowWidth;
+  bool addTab = false, deleteTab = false;
   int _itemIndex;
-  Timer delay;
-
-  List<Bill> _list = [
-    Bill(checked: true, number: "#001",bottomRight: false,bottomLeft: false, close: false ),
-    Bill(checked: false, number: "#002", bottomLeft: false, bottomRight: false, close: false),
-    Bill(checked: false, number: "#003", bottomRight: false, bottomLeft: false, close: false),
-  ];
+  List<BssTabItem> _list;
 
   @override
   void initState() {
     super.initState();
     _itemIndex = 0;
-    _widthTabItem = 120;
-    _sizeBoxWidth = (_list.length * _widthTabItem);
+    /// create list tab with [widget.tabTitle]
+    _list = generateTab(widget.tabTitle);
+    _list[0].checked = true;
+  }
+
+  generateTab(List<String> listTitle){
+    return listTitle.map((title) => BssTabItem(
+        checked: false,
+        number: title,
+        bottomRight: false,
+        bottomLeft: false,
+        close: false ),).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    _maxRowWidth = MediaQuery.of(context).size.width - 70;
-    if(_sizeBoxWidth > _maxRowWidth){
-      _sizeBoxWidth = _maxRowWidth;
-    }
-    else {
-      _sizeBoxWidth = (_list.length * _widthTabItem);
-    }
+    _sizeBoxWidth = _getWidth();
 
     return Container(
       margin: EdgeInsets.only(top: 50),
@@ -246,12 +274,14 @@ class _BSSTabBarState extends State<BSSTabBar> {
           }
           _sizeBoxWidth = _getWidth();
           _itemIndex = index;
-          //_itemScrollController.jumpTo(index: _itemIndex);
+          _itemScrollController.scrollTo(index: _itemIndex, duration: Duration(milliseconds: 1));
         });
       },
       child: TabItem(
-        bill: _list[index],
+        bssTabItem: _list[index],
         onRemoveTab: removeTab,
+        onScrollTab: scrollTab,
+        showIconClose: widget.showCloseIcon,
       ),
     );
 
@@ -289,6 +319,7 @@ class _BSSTabBarState extends State<BSSTabBar> {
     );
   }
 
+  /// item header to set bottomRight border when first tab selected
   _buildHeader(){
     bool border = false;
     if(_itemIndex == 0 && _list.length > 0){
@@ -321,75 +352,56 @@ class _BSSTabBarState extends State<BSSTabBar> {
     );
   }
 
+  /// item bottom to set bottomLeft border when last tab selected
   _buildBottom(){
-    bool opacity;
-    if(_itemIndex == _list.length - 1){
-      opacity = true;
-    }
-    else{
-      opacity = false;
-    }
-    return Row(
+    return Stack(
       children: <Widget>[
-        /*Padding(
-          padding: const EdgeInsets.only(top: 30, bottom: 14),
-          child: Center(
-            child: Container(
-              height: 30,
-              width: opacity ? 0 : 1,
-              color: Colors.grey[200],
+        Container(
+          width: 50,
+          height: 72,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(12),
+            ),
+            color: Color(backgroundFocusColor),
+          ),
+          child: Container(
+            width: 50,
+            height: 72,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                  bottomLeft: (_itemIndex == _list.length-1) ? Radius.circular(12) : Radius.circular(0),
+              ),
+              color: Color(backgroundDefaultColor),
             ),
           ),
-        ),*/
-        Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: <Widget>[
-            Container(
-              child: Container(
-                child: Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      addNewTab();
-                    },
-                    child: Icon(
-                      Icons.add_circle,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ),
-              ),
+        ),
+        Container(
+          height: 72,
+          width: 50,
+          margin: const EdgeInsets.only(top: 8),
+          child: Center(
+            child: IconButton(
+              onPressed: addNewTab,
+              icon: Icon(Icons.add_circle),
+              color: Colors.white70,
             ),
-            Container(
-              width: 50,
-              height: 20,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                ),
-                color: Color(backgroundFocusColor),
-              ),
-              child: Container(
-                width: 20,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                      bottomLeft: (_itemIndex == _list.length-1) ? Radius.circular(12) : Radius.circular(0),
-                  ),
-                  color: Color(backgroundDefaultColor),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
   }
 
+  /// add new tab
+  /// after add tab, refresh size box for list tab
   addNewTab(){
-    var newItem = new Bill(checked: true, number: "#00${_list.length+1}", bottomRight: false, bottomLeft: false, close: false);
+    var newItem = new BssTabItem(checked: true, number: "#00${_list.length+1}", bottomRight: false, bottomLeft: false, close: false);
     setState(() {
       _refreshItem();
       _list.add(newItem);
       _sizeBoxWidth = _getWidth();
+      addTab = true;
+
     });
     _itemIndex = _list.length-1;
     _list[_itemIndex -1].bottomRight = true;
@@ -403,6 +415,7 @@ class _BSSTabBarState extends State<BSSTabBar> {
         setState(() {
           if(_list[_itemIndex].close){
             _list.removeAt(_itemIndex);
+            deleteTab = true;
             _sizeBoxWidth = _getWidth();
           }
         });
@@ -414,11 +427,10 @@ class _BSSTabBarState extends State<BSSTabBar> {
             _list.removeAt(_itemIndex);
             _itemIndex = previousIndex;
             _list[_itemIndex].checked = true;
-
+            deleteTab = true;
             _sizeBoxWidth = _getWidth();
           }
         });
-        //_itemScrollController.jumpTo(index: _itemIndex);
       }
     }
     else{
@@ -427,21 +439,32 @@ class _BSSTabBarState extends State<BSSTabBar> {
         _list.removeAt(_itemIndex);
         _itemIndex = previousIndex;
         _list[_itemIndex].checked = true;
-
+        deleteTab = true;
         _sizeBoxWidth = _getWidth();
       });
-     // _itemScrollController.jumpTo(index: _itemIndex);
+    }
+  }
+
+  scrollTab(){
+    _sizeBoxWidth = _getWidth();
+    if(addTab || deleteTab){
+      _itemScrollController.scrollTo(index: _itemIndex, duration: Duration(milliseconds: 1));
+      addTab = false;
+      deleteTab = false;
     }
   }
 
   _getWidth(){
-    _maxRowWidth = MediaQuery.of(context).size.width - 60;
-    if( (_list.length * _widthTabItem) > _maxRowWidth){
-      _sizeBoxWidth = _maxRowWidth;
-    }
-    else {
-      _sizeBoxWidth = (_list.length * _widthTabItem);
-    }
+    _widthTabItem = 120;
+    _maxRowWidth = MediaQuery.of(context).size.width - 70;
+    setState(() {
+      if( (_list.length * _widthTabItem) >= _maxRowWidth){
+        _sizeBoxWidth = _maxRowWidth;
+      }
+      else {
+        _sizeBoxWidth = (_list.length * _widthTabItem);
+      }
+    });
     return _sizeBoxWidth;
   }
 
@@ -453,13 +476,13 @@ class _BSSTabBarState extends State<BSSTabBar> {
 
 }
 
-class Bill {
+class BssTabItem {
   bool checked;
   bool bottomLeft;
   bool bottomRight;
   bool close;
   String number;
 
-  Bill({this.checked, this.number, this.bottomLeft, this.bottomRight, this.close});
+  BssTabItem({this.checked, this.number, this.bottomLeft, this.bottomRight, this.close});
 
 }
